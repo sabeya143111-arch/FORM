@@ -161,8 +161,8 @@
     <!-- أوامر الشراء -->
     <div class="buy-title">أوامر الشراء</div>
     <table>
-      <colgroup><col style="width:17%"><col style="width:17%"><col style="width:66%"></colgroup>
-      <thead class="buy"><tr><th>الوزن</th><th>السعر</th><th>ملاحظات</th></tr></thead>
+      <colgroup><col style="width:17%"><col style="width:17%"><col style="width:49%"><col style="width:17%"></colgroup>
+      <thead class="buy"><tr><th>الوزن</th><th>السعر</th><th>ملاحظات</th><th>العمولة</th></tr></thead>
       <tbody id="buyRows"></tbody>
     </table>
 
@@ -207,14 +207,15 @@ $('approver').value  = localStorage.getItem('swag_approver')  || 'محمد ال�
   ()=>localStorage.setItem('swag_'+id,$(id).value)));
 
 function orderRow(){const tr=document.createElement('tr');
-  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" step="any" class="f-weight"></td>
-    <td class="cell"><input type="number" inputmode="decimal" step="any" class="f-price"></td>
+  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="text" inputmode="decimal" class="fmtnum f-weight"></td>
+    <td class="cell"><input type="text" inputmode="decimal" class="fmtnum f-price"></td>
     <td class="cell"><textarea class="f-desc" rows="1"></textarea></td>
-    <td class="cell"><input type="number" inputmode="decimal" step="any" class="f-comm"></td>`;return tr;}
+    <td class="cell"><input type="text" inputmode="decimal" class="fmtnum f-comm"></td>`;return tr;}
 function buyRow(){const tr=document.createElement('tr');
-  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" step="any" class="f-weight"></td>
-    <td class="cell"><input type="number" inputmode="decimal" step="any" class="f-price"></td>
-    <td class="cell"><textarea class="f-note" rows="1"></textarea></td>`;return tr;}
+  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="text" inputmode="decimal" class="fmtnum f-weight"></td>
+    <td class="cell"><input type="text" inputmode="decimal" class="fmtnum f-price"></td>
+    <td class="cell"><textarea class="f-note" rows="1"></textarea></td>
+    <td class="cell"><input type="text" inputmode="decimal" class="fmtnum f-comm"></td>`;return tr;}
 
 for(let i=0;i<4;i++)$('orderRows').appendChild(orderRow());
 for(let i=0;i<9;i++)$('buyRows').appendChild(buyRow());
@@ -249,7 +250,7 @@ function snapshot(){
       desc:r.querySelector('.f-desc').value, commission:r.querySelector('.f-comm').value})),
     buys:[...$('buyRows').children].map(r=>({
       weight:r.querySelector('.f-weight').value, price:r.querySelector('.f-price').value,
-      note:r.querySelector('.f-note').value}))
+      note:r.querySelector('.f-note').value, commission:r.querySelector('.f-comm').value}))
   };
 }
 let saveT;
@@ -272,7 +273,8 @@ function restore(){
   if(Array.isArray(d.buys)){$('buyRows').innerHTML='';
     d.buys.forEach(b=>{const r=buyRow();
       r.querySelector('.f-weight').value=b.weight||''; r.querySelector('.f-price').value=b.price||'';
-      r.querySelector('.f-note').value=b.note||''; $('buyRows').appendChild(r);});}
+      r.querySelector('.f-note').value=b.note||''; r.querySelector('.f-comm').value=b.commission||'';
+      $('buyRows').appendChild(r);});}
   while($('orderRows').children.length<4)$('orderRows').appendChild(orderRow());
   while($('buyRows').children.length<9)$('buyRows').appendChild(buyRow());
 }
@@ -284,10 +286,17 @@ ensureTail($('orderRows')); ensureTail($('buyRows'));
 function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 document.querySelector('.sheet').addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autoGrow(e.target);});
 document.querySelectorAll('.sheet textarea').forEach(autoGrow);
+/* ===== Number format: 65,846.00 ===== */
+function fmtField(el){const r=el.value.trim();if(r==='')return;
+  el.value=num(r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});persist();}
+function rawField(el){const r=el.value.trim();if(r==='')return;el.value=String(num(r));}
+document.querySelector('.sheet').addEventListener('focusin',e=>{if(e.target.classList&&e.target.classList.contains('fmtnum'))rawField(e.target);});
+document.querySelector('.sheet').addEventListener('focusout',e=>{if(e.target.classList&&e.target.classList.contains('fmtnum'))fmtField(e.target);});
+document.querySelectorAll('.sheet .fmtnum').forEach(fmtField);
 
 let tT;function toast(m,k){const t=$('toast');t.className='toast '+(k||'')+' show';t.textContent=m;
   clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);}
-function num(v){const n=parseFloat(v);return isNaN(n)?0:n;}
+function num(v){if(v==null)return 0;const n=parseFloat((''+v).replace(/,/g,''));return isNaN(n)?0:n;}
 function collect(){
   const orders=[...$('orderRows').children].map(r=>({
     weight:num(r.querySelector('.f-weight').value),price:num(r.querySelector('.f-price').value),
@@ -295,8 +304,8 @@ function collect(){
   })).filter(o=>o.weight||o.price||o.desc||o.commission);
   const buys=[...$('buyRows').children].map(r=>({
     weight:num(r.querySelector('.f-weight').value),price:num(r.querySelector('.f-price').value),
-    note:r.querySelector('.f-note').value.trim()
-  })).filter(b=>b.weight||b.price||b.note);
+    note:r.querySelector('.f-note').value.trim(),commission:num(r.querySelector('.f-comm').value)
+  })).filter(b=>b.weight||b.price||b.note||b.commission);
   return{metal:document.querySelector('input[name="metal"]:checked').value,date:$('orderDate').value,
     target:$('target').value.trim(),submitter:$('submitter').value.trim(),
     approver:$('approver').value.trim(),orders,buys};
