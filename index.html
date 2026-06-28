@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1d3b2a">
+<title>طلب اوردر فرع السبائك — SWAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#d9e7d2;        /* sage header */
+    --green-deep:#274a36;
+    --peach:#fbe2cf;        /* purchase header */
+    --peach-text:#8a4b25;
+    --gold:#b8985a;
+    --gold-deep:#8f7438;
+    --line:#3a3a34;         /* thin grid line */
+    --line-out:#2a2a25;     /* outer border */
+    --magenta:#bb3d89;
+    --ink:#222219;
+    --bg:#ededE4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);
+       color:var(--ink);padding:14px 8px 26px;-webkit-font-smoothing:antialiased;touch-action:manipulation}
+
+  .sheet{max-width:520px;margin:0 auto;background:#fff;
+         border:2px solid var(--line-out);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+
+  /* ===== Header: columns align with table (17/17/49/17) ===== */
+  .hdr{
+    display:grid;
+    grid-template-columns:17% 17% 49% 17%;
+    grid-template-areas:
+      "title title logo date"
+      "gl    gc    logo date"
+      "sl    sc    logo date";
+    background:var(--green);
+  }
+  .hdr > *{border-inline-start:1px solid var(--line)}
+  .h-title{grid-area:title;text-align:center;font-weight:800;font-size:12.5px;
+           color:var(--green-deep);padding:6px 3px;border:1.4px solid var(--magenta);
+           margin:3px;border-radius:2px;line-height:1.25;background:#fff}
+  .h-gl{grid-area:gl}.h-gc{grid-area:gc}.h-sl{grid-area:sl}.h-sc{grid-area:sc}
+  .m-lab{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+         border-top:1px solid var(--line)}
+  .m-chk{display:flex;align-items:center;justify-content:center;background:#fff;
+         border-top:1px solid var(--line);cursor:pointer;padding:5px 0}
+  .m-chk input{display:none}
+  .box{width:18px;height:18px;border:1.5px solid var(--line);border-radius:2px;background:#fff;
+       display:grid;place-items:center}
+  .box::after{content:"✓";font-size:13px;font-weight:800;color:#1f7a4d;opacity:0;line-height:1}
+  .m-chk input:checked + .box::after{opacity:1}
+
+  .h-logo{grid-area:logo;display:flex;flex-direction:column;align-items:center;
+          justify-content:center;gap:1px;padding:4px}
+  .h-logo svg{width:34px;height:24px;display:block}
+  .logo-w{font-family:'Playfair Display',serif;font-weight:700;font-size:22px;letter-spacing:3px;
+          background:linear-gradient(135deg,#d8ba74,#9c7e44);-webkit-background-clip:text;
+          background-clip:text;color:transparent;line-height:1}
+  .logo-s{font-size:8px;color:var(--gold-deep);font-weight:700;letter-spacing:4px;margin-top:1px}
+
+  .h-date{grid-area:date;display:flex;flex-direction:column}
+  .d-lab{text-align:center;font-weight:800;font-size:13px;color:var(--green-deep);
+         padding:6px 2px;border-bottom:1px solid var(--line)}
+  .h-date input{flex:1;border:none;background:#fff;font-family:inherit;font-size:12.5px;
+                font-weight:700;text-align:center;outline:none;color:var(--ink);padding:6px 2px;min-height:30px}
+
+  /* ===== Tables ===== */
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  th,td{border:1px solid var(--line)}
+  th{font-weight:800;font-size:12.5px;padding:6px 2px;color:var(--green-deep)}
+  thead.order th{background:var(--green)}
+  thead.buy th{background:var(--peach);color:var(--peach-text)}
+  .buy-title{background:var(--peach);color:var(--peach-text);font-weight:800;font-size:13.5px;
+             text-align:center;padding:7px;border:1px solid var(--line);border-top:none}
+  td.cell{height:27px;position:relative}
+  td.cell input{width:100%;height:100%;border:none;background:transparent;font-family:inherit;
+                font-size:13px;text-align:center;padding:0 5px;color:var(--ink);outline:none}
+  td.cell input:focus{background:#fffbe9}
+  .del{position:absolute;top:1px;inset-inline-start:1px;width:15px;height:15px;border:none;
+       border-radius:50%;background:#f4d3ce;color:#b23a2d;font-size:12px;line-height:13px;
+       font-weight:800;padding:0;cursor:pointer;opacity:.5;z-index:2;touch-action:manipulation}
+  .del:active{opacity:1;transform:scale(.9)}
+
+  /* ===== Hadaf ===== */
+  .hadaf td{border:1px solid var(--line);vertical-align:middle}
+  .hadaf-label{background:var(--green);font-weight:800;font-size:12.5px;color:var(--green-deep);
+               text-align:center;width:17%}
+  .hadaf-input textarea{width:100%;min-height:104px;border:none;background:transparent;
+               font-family:inherit;font-size:13px;padding:7px;resize:none;outline:none;color:var(--ink)}
+  .hadaf-input textarea:focus{background:#fffbe9}
+
+  /* ===== Signatures ===== */
+  .sign th{background:#fff;color:var(--ink);font-size:12.5px;padding:7px 4px}
+  .sign td.cell{height:34px}
+  .sign td.cell input{font-weight:700}
+
+  /* ===== Tools / bar / toast ===== */
+  .printwrap{max-width:520px;margin:10px auto 0;text-align:center}
+  .btn-print{display:inline-flex;align-items:center;gap:6px;border:1.4px solid var(--green-deep);
+             background:#fff;color:var(--green-deep);font-family:inherit;font-weight:700;
+             font-size:12.5px;padding:7px 16px;border-radius:8px;cursor:pointer;touch-action:manipulation}
+  .btn-print:active{transform:scale(.96)}
+  .toast{position:fixed;bottom:20px;inset-inline:14px;z-index:100;background:#23241f;color:#fff;
+         padding:13px 16px;border-radius:11px;font-weight:600;font-size:14px;text-align:center;
+         box-shadow:0 10px 30px rgba(0,0,0,.3);transform:translateY(150%);opacity:0;
+         transition:all .3s cubic-bezier(.2,.9,.3,1)}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.ok{background:#1c4d34}.toast.err{background:#7a2620}
+
+  @media print{body{background:#fff;padding:0}.printwrap,.toast,.del{display:none!important}
+    .sheet{box-shadow:none;max-width:100%}}
+</style>
+</head>
+<body>
+
+  <div class="sheet">
+    <!-- Header -->
+    <div class="hdr">
+      <div class="h-title">طلب اوردر فرع السبائك</div>
+
+      <div class="h-gl m-lab">ذهب</div>
+      <label class="h-gc m-chk"><input type="radio" name="metal" value="ذهب" checked><span class="box"></span></label>
+      <div class="h-sl m-lab">فضة</div>
+      <label class="h-sc m-chk"><input type="radio" name="metal" value="فضة"><span class="box"></span></label>
+
+      <div class="h-logo">
+        <svg viewBox="0 0 40 26" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#d8ba74"/><stop offset="1" stop-color="#9c7e44"/></linearGradient></defs>
+          <path d="M30 6 C22 1,9 4,12 11 C14 16,27 13,28 19 C29 25,15 26,9 21"
+                fill="none" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <div class="logo-w">SWAG</div>
+        <div class="logo-s">سواج</div>
+      </div>
+
+      <div class="h-date">
+        <div class="d-lab">التاريخ</div>
+        <input type="date" id="orderDate">
+      </div>
+    </div>
+
+    <!-- الطلب -->
+    <table>
+      <colgroup><col style="width:17%"><col style="width:17%"><col style="width:49%"><col style="width:17%"></colgroup>
+      <thead class="order"><tr><th>الوزن</th><th>السعر</th><th>البيان</th><th>العمولة</th></tr></thead>
+      <tbody id="orderRows"></tbody>
+    </table>
+
+    <!-- أوامر الشراء -->
+    <div class="buy-title">أوامر الشراء</div>
+    <table>
+      <colgroup><col style="width:17%"><col style="width:17%"><col style="width:66%"></colgroup>
+      <thead class="buy"><tr><th>الوزن</th><th>السعر</th><th>ملاحظات</th></tr></thead>
+      <tbody id="buyRows"></tbody>
+    </table>
+
+    <!-- الهدف -->
+    <table class="hadaf">
+      <tr>
+        <td class="hadaf-input"><textarea id="target"></textarea></td>
+        <td class="hadaf-label">الهدف تحقيقه</td>
+      </tr>
+    </table>
+
+    <!-- التواقيع -->
+    <table class="sign">
+      <tr><th>مقدم الطلب</th><th>تعميد الطلب</th></tr>
+      <tr>
+        <td class="cell"><input type="text" id="submitter"></td>
+        <td class="cell"><input type="text" id="approver"></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="printwrap">
+    <button class="btn-print" id="printBtn">🖨 طباعة</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const CONFIG = { SCRIPT_URL: "" };   /* <-- Apps Script /exec URL yaha */
+
+const $ = id => document.getElementById(id);
+$('orderDate').valueAsDate = new Date();
+$('submitter').value = localStorage.getItem('swag_submitter') || 'حسين الصلاحي';
+$('approver').value  = localStorage.getItem('swag_approver')  || 'محمد الصلاحي';
+['submitter','approver'].forEach(id=>$(id).addEventListener('change',
+  ()=>localStorage.setItem('swag_'+id,$(id).value)));
+
+function orderRow(){const tr=document.createElement('tr');
+  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" class="f-weight"></td>
+    <td class="cell"><input type="number" inputmode="decimal" class="f-price"></td>
+    <td class="cell"><input type="text" class="f-desc"></td>
+    <td class="cell"><input type="number" inputmode="decimal" class="f-comm"></td>`;return tr;}
+function buyRow(){const tr=document.createElement('tr');
+  tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" class="f-weight"></td>
+    <td class="cell"><input type="number" inputmode="decimal" class="f-price"></td>
+    <td class="cell"><input type="text" class="f-note"></td>`;return tr;}
+
+for(let i=0;i<4;i++)$('orderRows').appendChild(orderRow());
+for(let i=0;i<9;i++)$('buyRows').appendChild(buyRow());
+
+/* ===== Rows: full ho to auto-add, aur delete (×) ===== */
+function rowEmpty(r){return [...r.querySelectorAll('input')].every(i=>!i.value.trim());}
+function ensureTail(tb){
+  const make = tb.id==='orderRows'?orderRow:buyRow;
+  const rows=tb.children;
+  if(rows.length===0 || !rowEmpty(rows[rows.length-1])) tb.appendChild(make());
+}
+function delRow(r){
+  const tb=r.parentNode;
+  if(tb.children.length>1) r.remove();
+  else r.querySelectorAll('input').forEach(i=>i.value='');
+  ensureTail(tb); persist();
+}
+[$('orderRows'),$('buyRows')].forEach(tb=>{
+  tb.addEventListener('click',e=>{const b=e.target.closest('.del'); if(b) delRow(b.closest('tr'));});
+  tb.addEventListener('input',()=>ensureTail(tb));
+});
+
+/* ===== Auto-save (data erase na ho) ===== */
+const STORE='swag_form_state';
+function snapshot(){
+  return {
+    metal:(document.querySelector('input[name="metal"]:checked')||{}).value||'ذهب',
+    date:$('orderDate').value, target:$('target').value,
+    submitter:$('submitter').value, approver:$('approver').value,
+    orders:[...$('orderRows').children].map(r=>({
+      weight:r.querySelector('.f-weight').value, price:r.querySelector('.f-price').value,
+      desc:r.querySelector('.f-desc').value, commission:r.querySelector('.f-comm').value})),
+    buys:[...$('buyRows').children].map(r=>({
+      weight:r.querySelector('.f-weight').value, price:r.querySelector('.f-price').value,
+      note:r.querySelector('.f-note').value}))
+  };
+}
+let saveT;
+function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{
+  try{localStorage.setItem(STORE,JSON.stringify(snapshot()));}catch(e){}
+},250);}
+function restore(){
+  let d;try{d=JSON.parse(localStorage.getItem(STORE)||'null');}catch(e){d=null;}
+  if(!d)return;
+  if(d.metal){const r=document.querySelector('input[name="metal"][value="'+d.metal+'"]');if(r)r.checked=true;}
+  if(d.date)$('orderDate').value=d.date;
+  if(d.target!=null)$('target').value=d.target;
+  if(d.submitter)$('submitter').value=d.submitter;
+  if(d.approver)$('approver').value=d.approver;
+  if(Array.isArray(d.orders)){$('orderRows').innerHTML='';
+    d.orders.forEach(o=>{const r=orderRow();
+      r.querySelector('.f-weight').value=o.weight||''; r.querySelector('.f-price').value=o.price||'';
+      r.querySelector('.f-desc').value=o.desc||''; r.querySelector('.f-comm').value=o.commission||'';
+      $('orderRows').appendChild(r);});}
+  if(Array.isArray(d.buys)){$('buyRows').innerHTML='';
+    d.buys.forEach(b=>{const r=buyRow();
+      r.querySelector('.f-weight').value=b.weight||''; r.querySelector('.f-price').value=b.price||'';
+      r.querySelector('.f-note').value=b.note||''; $('buyRows').appendChild(r);});}
+  while($('orderRows').children.length<4)$('orderRows').appendChild(orderRow());
+  while($('buyRows').children.length<9)$('buyRows').appendChild(buyRow());
+}
+restore();
+ensureTail($('orderRows')); ensureTail($('buyRows'));
+['input','change'].forEach(ev=>document.querySelector('.sheet').addEventListener(ev,persist));
+
+let tT;function toast(m,k){const t=$('toast');t.className='toast '+(k||'')+' show';t.textContent=m;
+  clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);}
+function num(v){const n=parseFloat(v);return isNaN(n)?0:n;}
+function collect(){
+  const orders=[...$('orderRows').children].map(r=>({
+    weight:num(r.querySelector('.f-weight').value),price:num(r.querySelector('.f-price').value),
+    desc:r.querySelector('.f-desc').value.trim(),commission:num(r.querySelector('.f-comm').value)
+  })).filter(o=>o.weight||o.price||o.desc||o.commission);
+  const buys=[...$('buyRows').children].map(r=>({
+    weight:num(r.querySelector('.f-weight').value),price:num(r.querySelector('.f-price').value),
+    note:r.querySelector('.f-note').value.trim()
+  })).filter(b=>b.weight||b.price||b.note);
+  return{metal:document.querySelector('input[name="metal"]:checked').value,date:$('orderDate').value,
+    target:$('target').value.trim(),submitter:$('submitter').value.trim(),
+    approver:$('approver').value.trim(),orders,buys};
+}
+let lastSaved=localStorage.getItem('swag_lastSaved')||'';
+async function syncToSheet(){
+  const data=collect();
+  if(!CONFIG.SCRIPT_URL) return;                       // URL set nahi to skip
+  if(!data.orders.length && !data.buys.length) return; // khali to skip
+  const hash=JSON.stringify(data);
+  if(hash===lastSaved) return;                         // change nahi to dobara save nahi
+  try{
+    const res=await fetch(CONFIG.SCRIPT_URL,{method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});
+    const out=await res.json();
+    if(out&&out.ok){lastSaved=hash;try{localStorage.setItem('swag_lastSaved',hash);}catch(e){}toast('تم الحفظ في الشيت ✓','ok');}
+  }catch(e){/* offline ho to bhi print chalega */}
+}
+$('printBtn').addEventListener('click',async()=>{
+  await syncToSheet();   // background me sheet sync
+  window.print();        // phir print
+});
+</script>
+</body>
+</html>
