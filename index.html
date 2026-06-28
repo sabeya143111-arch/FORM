@@ -65,7 +65,7 @@
   .h-date{grid-area:date;display:flex;flex-direction:column;position:relative}
   .d-lab{text-align:center;font-weight:800;font-size:13px;color:var(--green-deep);
          padding:6px 2px;border-bottom:1px solid var(--line)}
-  .d-val{flex:1;min-width:0;border:none;background:#fff;font-family:inherit;font-weight:700;
+  .d-val{flex:1;min-width:0;border:none;background:transparent;font-family:inherit;font-weight:700;
          font-size:12.5px;color:var(--ink);text-align:center;cursor:pointer;padding:7px 2px;
          line-height:1.25;white-space:normal;word-break:break-word}
   .d-hidden{position:absolute;left:50%;bottom:0;width:1px;height:1px;opacity:0;
@@ -181,6 +181,10 @@
         <td class="cell"><input type="text" id="submitter"></td>
         <td class="cell"><input type="text" id="approver"></td>
       </tr>
+      <tr><th colspan="2">اعتماد المدير</th></tr>
+      <tr>
+        <td class="cell" colspan="2"><input type="text" id="director"></td>
+      </tr>
     </table>
   </div>
 
@@ -288,15 +292,20 @@ document.querySelector('.sheet').addEventListener('input',e=>{if(e.target.tagNam
 document.querySelectorAll('.sheet textarea').forEach(autoGrow);
 /* ===== Number format: 65,846.00 ===== */
 function fmtField(el){const r=el.value.trim();if(r==='')return;
-  el.value=num(r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});persist();}
-function rawField(el){const r=el.value.trim();if(r==='')return;el.value=String(num(r));}
+  const n=num(r); if(isNaN(n)) return;
+  el.value=n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});persist();}
+function rawField(el){const r=el.value.trim();if(r==='')return;const n=num(r);el.value=String(n);}
 document.querySelector('.sheet').addEventListener('focusin',e=>{if(e.target.classList&&e.target.classList.contains('fmtnum'))rawField(e.target);});
 document.querySelector('.sheet').addEventListener('focusout',e=>{if(e.target.classList&&e.target.classList.contains('fmtnum'))fmtField(e.target);});
 document.querySelectorAll('.sheet .fmtnum').forEach(fmtField);
 
 let tT;function toast(m,k){const t=$('toast');t.className='toast '+(k||'')+' show';t.textContent=m;
   clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);}
-function num(v){if(v==null)return 0;const n=parseFloat((''+v).replace(/,/g,''));return isNaN(n)?0:n;}
+function num(v){if(v==null||!String(v).trim())return 0;
+  const cleaned=String(v).trim().replace(/[^
+\d.-]/g,'');
+  const n=parseFloat(cleaned);
+  return isNaN(n)?0:n;}
 function collect(){
   const orders=[...$('orderRows').children].map(r=>({
     weight:num(r.querySelector('.f-weight').value),price:num(r.querySelector('.f-price').value),
