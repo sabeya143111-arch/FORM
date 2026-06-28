@@ -124,16 +124,37 @@
   .toast.show{transform:translateY(0);opacity:1}
   .toast.ok{background:#1c4d34}.toast.err{background:#7a2620}
 
+  /* ===== Login ===== */
+  #app{display:none}
+  #login{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#234634,#16271d);
+         display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{width:100%;max-width:330px;background:#fff;border-radius:16px;padding:24px 20px 20px;
+              box-shadow:0 20px 50px rgba(0,0,0,.4);text-align:center}
+  .login-card img{width:120px;height:auto;margin:0 auto 4px;display:block}
+  .login-title{font-weight:800;font-size:15px;color:var(--green-deep);margin:4px 0 18px}
+  .login-card input{width:100%;font-family:inherit;font-size:16px;padding:12px;margin-bottom:12px;
+                    border:1.5px solid var(--line);border-radius:10px;background:#fbfaf6;outline:none;
+                    text-align:center;color:var(--ink)}
+  .login-card input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,152,90,.15)}
+  .login-btn{width:100%;border:none;border-radius:10px;padding:13px;font-family:inherit;font-weight:800;
+             font-size:16px;color:#1c1c18;cursor:pointer;
+             background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+             box-shadow:0 6px 16px rgba(184,152,90,.35)}
+  .login-btn:active{transform:scale(.985)}
+  .login-err{color:#c0392b;font-size:13px;min-height:18px;margin-top:10px;font-weight:600}
+  #logoutBtn{border-color:#c2453a;color:#c2453a}
+
   @media print{
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
     body{background:#fff;padding:0}
-    .printwrap,.toast,.del{display:none!important}
+    .printwrap,.toast,.del,#login{display:none!important}
     .sheet{box-shadow:none;max-width:100%}
   }
 </style>
 </head>
 <body>
 
+  <div id="app">
   <div class="sheet">
     <!-- Header -->
     <div class="hdr">
@@ -191,12 +212,25 @@
 
   <div class="printwrap">
     <button class="btn-print" id="printBtn">🖨 طباعة</button>
+    <button class="btn-print" id="logoutBtn">خروج</button>
+  </div>
+  </div><!-- /#app -->
+
+  <div id="login">
+    <div class="login-card">
+      <img id="loginLogo" alt="SWAG">
+      <div class="login-title">طلب اوردر فرع السبائك</div>
+      <input type="text" id="loginUser" placeholder="اسم المستخدم" autocomplete="username" autocapitalize="off">
+      <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password">
+      <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
+      <div class="login-err" id="loginErr"></div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
 <script>
-const CONFIG = { SCRIPT_URL: "" };   /* <-- Apps Script /exec URL yaha */
+const CONFIG = { SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxnORtVDEzbQHNfcwFTp7UCGnTU-gEdYMRp8tytyqajNgb8pPflQuvZ5S1Jd8fM6THMlg/exec" };   /* <-- Apps Script /exec URL yaha */
 
 const $ = id => document.getElementById(id);
 $('orderDate').valueAsDate = new Date();
@@ -338,6 +372,47 @@ $('printBtn').addEventListener('click',async()=>{
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
+
+/* ===== Login / Auth ===== */
+const AUTH={user:"swag",passHash:"650f8aa2b6341f25b3f8916e6ec1d85777f22b8335e8ee2b0fb7a4cfdd8b82a9"};
+async function sha256(t){
+  if(window.crypto&&crypto.subtle){
+    const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+  // fallback (rare): simple hash
+  let h=0;for(let i=0;i<t.length;i++){h=(h*31+t.charCodeAt(i))>>>0;}return 'fb'+h;
+}
+function showApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  try{document.querySelectorAll('.sheet textarea').forEach(autoGrow);}catch(e){}
+}
+function showLogin(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+  setTimeout(()=>document.getElementById('loginUser').focus(),100);
+}
+async function tryLogin(){
+  const u=document.getElementById('loginUser').value.trim().toLowerCase();
+  const p=document.getElementById('loginPass').value;
+  const h=await sha256(p);
+  if(u===AUTH.user && h===AUTH.passHash){
+    localStorage.setItem('swag_auth','1'); document.getElementById('loginErr').textContent=''; showApp();
+  }else{
+    document.getElementById('loginErr').textContent='اسم المستخدم أو كلمة المرور غير صحيحة';
+    document.getElementById('loginPass').value='';
+  }
+}
+(function(){
+  const lg=document.querySelector('.logo-img'); if(lg)document.getElementById('loginLogo').src=lg.src;
+  document.getElementById('loginBtn').addEventListener('click',tryLogin);
+  document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+  document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus();});
+  document.getElementById('logoutBtn').addEventListener('click',()=>{localStorage.removeItem('swag_auth');location.reload();});
+  if(localStorage.getItem('swag_auth')==='1'){showApp();}else{showLogin();}
+})();
+
 </script>
 </body>
 </html>
