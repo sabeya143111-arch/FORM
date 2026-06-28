@@ -62,11 +62,14 @@
           background-clip:text;color:transparent;line-height:1}
   .logo-s{font-size:8px;color:var(--gold-deep);font-weight:700;letter-spacing:4px;margin-top:1px}
 
-  .h-date{grid-area:date;display:flex;flex-direction:column}
+  .h-date{grid-area:date;display:flex;flex-direction:column;position:relative}
   .d-lab{text-align:center;font-weight:800;font-size:13px;color:var(--green-deep);
          padding:6px 2px;border-bottom:1px solid var(--line)}
-  .h-date input{flex:1;min-width:0;border:none;background:#fff;font-family:inherit;font-size:11px;
-                font-weight:700;text-align:center;outline:none;color:var(--ink);padding:6px 1px;min-height:30px}
+  .d-val{flex:1;min-width:0;border:none;background:#fff;font-family:inherit;font-weight:700;
+         font-size:12.5px;color:var(--ink);text-align:center;cursor:pointer;padding:7px 2px;
+         line-height:1.25;white-space:normal;word-break:break-word}
+  .d-hidden{position:absolute;left:50%;bottom:0;width:1px;height:1px;opacity:0;
+            pointer-events:none;border:0;padding:0;margin:0}
 
   /* ===== Tables ===== */
   table{width:100%;border-collapse:collapse;table-layout:fixed}
@@ -86,6 +89,10 @@
        display:flex;align-items:center;justify-content:center;touch-action:manipulation}
   .del:active{opacity:1;background:#e6b0a7;transform:translateY(-50%) scale(.86)}
   .del + input{width:calc(100% - 18px);margin-inline-start:18px}
+  td.cell textarea{width:100%;border:none;background:transparent;font-family:inherit;font-size:13px;
+                   text-align:start;line-height:1.35;padding:5px 6px;resize:none;overflow:hidden;
+                   color:var(--ink);outline:none;display:block;height:26px;min-height:26px}
+  td.cell textarea:focus{background:#fffbe9}
 
   /* ===== Hadaf ===== */
   .hadaf td{border:1px solid var(--line);vertical-align:middle}
@@ -142,7 +149,8 @@
 
       <div class="h-date">
         <div class="d-lab">التاريخ</div>
-        <input type="date" id="orderDate">
+        <button type="button" class="d-val" id="dateBtn">—</button>
+        <input type="date" id="orderDate" class="d-hidden" tabindex="-1" aria-hidden="true">
       </div>
     </div>
 
@@ -190,6 +198,12 @@ const CONFIG = { SCRIPT_URL: "" };   /* <-- Apps Script /exec URL yaha */
 
 const $ = id => document.getElementById(id);
 $('orderDate').valueAsDate = new Date();
+function renderDate(){const v=$('orderDate').value,b=$('dateBtn');
+  if(!v){b.textContent='—';return;} const p=v.split('-'); b.textContent=(+p[2])+'/'+(+p[1])+'/'+p[0];}
+$('dateBtn').addEventListener('click',()=>{const i=$('orderDate');
+  if(i.showPicker){try{i.showPicker();return;}catch(e){}} i.focus(); i.click();});
+$('orderDate').addEventListener('change',()=>{renderDate();persist();});
+renderDate();
 $('submitter').value = localStorage.getItem('swag_submitter') || 'حسين الصلاحي';
 $('approver').value  = localStorage.getItem('swag_approver')  || 'محمد الصلاحي';
 ['submitter','approver'].forEach(id=>$(id).addEventListener('change',
@@ -198,18 +212,18 @@ $('approver').value  = localStorage.getItem('swag_approver')  || 'محمد ال�
 function orderRow(){const tr=document.createElement('tr');
   tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" class="f-weight"></td>
     <td class="cell"><input type="number" inputmode="decimal" class="f-price"></td>
-    <td class="cell"><input type="text" class="f-desc"></td>
+    <td class="cell"><textarea class="f-desc" rows="1"></textarea></td>
     <td class="cell"><input type="number" inputmode="decimal" class="f-comm"></td>`;return tr;}
 function buyRow(){const tr=document.createElement('tr');
   tr.innerHTML=`<td class="cell"><button type="button" class="del" tabindex="-1">×</button><input type="number" inputmode="decimal" class="f-weight"></td>
     <td class="cell"><input type="number" inputmode="decimal" class="f-price"></td>
-    <td class="cell"><input type="text" class="f-note"></td>`;return tr;}
+    <td class="cell"><textarea class="f-note" rows="1"></textarea></td>`;return tr;}
 
 for(let i=0;i<4;i++)$('orderRows').appendChild(orderRow());
 for(let i=0;i<9;i++)$('buyRows').appendChild(buyRow());
 
 /* ===== Rows: full ho to auto-add, aur delete (×) ===== */
-function rowEmpty(r){return [...r.querySelectorAll('input')].every(i=>!i.value.trim());}
+function rowEmpty(r){return [...r.querySelectorAll('input,textarea')].every(i=>!i.value.trim());}
 function ensureTail(tb){
   const make = tb.id==='orderRows'?orderRow:buyRow;
   const rows=tb.children;
@@ -218,7 +232,7 @@ function ensureTail(tb){
 function delRow(r){
   const tb=r.parentNode;
   if(tb.children.length>1) r.remove();
-  else r.querySelectorAll('input').forEach(i=>i.value='');
+  else r.querySelectorAll('input,textarea').forEach(i=>i.value='');
   ensureTail(tb); persist();
 }
 [$('orderRows'),$('buyRows')].forEach(tb=>{
@@ -266,8 +280,13 @@ function restore(){
   while($('buyRows').children.length<9)$('buyRows').appendChild(buyRow());
 }
 restore();
+renderDate();
 ensureTail($('orderRows')); ensureTail($('buyRows'));
 ['input','change'].forEach(ev=>document.querySelector('.sheet').addEventListener(ev,persist));
+/* ===== Lamba text -> row auto badhe ===== */
+function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+document.querySelector('.sheet').addEventListener('input',e=>{if(e.target.tagName==='TEXTAREA')autoGrow(e.target);});
+document.querySelectorAll('.sheet textarea').forEach(autoGrow);
 
 let tT;function toast(m,k){const t=$('toast');t.className='toast '+(k||'')+' show';t.textContent=m;
   clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),3200);}
